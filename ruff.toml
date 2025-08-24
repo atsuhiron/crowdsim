@@ -1,0 +1,28 @@
+target-version = "py313"
+line-length = 119
+
+exclude = ["*.pyi"]
+
+[lint]
+select = ["ALL"]
+ignore = [
+    "D",
+    "FIX002",
+    "ERA001",
+    "FBT001",
+    "FBT002",
+    "EM101",
+    "TRY003",
+    "PLR0913",
+    "COM812"
+]
+
+[lint.per-file-ignores]
+"__init__.py" = [
+    "F401"      # The imported class is rarely used within __init__.py
+]
+
+[format]
+indent-style = "space"
+quote-style = "double"
+skip-magic-trailing-comma = false
