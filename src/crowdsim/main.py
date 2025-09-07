@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 from crowdsim.global_linear_force import GlobalLinearForce
@@ -12,7 +13,6 @@ def _step(
     new_particles = []
     num = len(particles)
     shape = (num, 2)
-    frc_arr = np.empty(shape)
     acc_arr = np.empty(shape)
     vel_arr = np.empty(shape)
     pos_arr = np.empty(shape)
@@ -30,28 +30,55 @@ def _step(
                 continue
             frc += particles[j].force(tgt.pos)
 
-        acc_arr[i] = frc_arr[i] / tgt.mass
+        acc_arr[i] = frc / tgt.mass
         vel_arr[i] += acc_arr[i] * dt
         pos_arr[i] += vel_arr[i] * dt
 
-        new_particles.append(Particle(group_idx=tgt.group_idx, mass=tgt.mass, pos=pos_arr[i], vel=vel_arr[i]))
+        new_particles.append(
+            Particle(
+                group_idx=tgt.group_idx,
+                mass=tgt.mass,
+                fric_coef=tgt.fric_coef,
+                pos=pos_arr[i],
+                vel=vel_arr[i],
+            )
+        )
     return new_particles
 
 
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    rg = np.random.Generator(np.random.MT19937(1234))
+def main() -> None:
+    rg = np.random.Generator(np.random.MT19937(1238))
     _num = 10
-    _particles = [Particle(group_idx=0, mass=1.0, pos=rg.random(2), vel=np.zeros(2)) for _ in range(_num)]
-    _glf_map = {0: GlobalLinearForce(group_idx=0, vec=np.array([1.0, 0.0]))}
+    delta_t = 0.01
+    steps = 4
+    _particles = [
+        Particle(
+            group_idx=i_p % 2,
+            mass=1.0,
+            fric_coef=0.1,
+            pos=rg.random(2),
+            vel=np.zeros(2),
+        )
+        for i_p in range(_num)
+    ]
+    _glf_map = {
+        0: GlobalLinearForce(group_idx=0, vec=np.array([500, 0.0])),
+        1: GlobalLinearForce(group_idx=0, vec=np.array([0.0, 500])),
+    }
 
-    _new_particles = _step(_particles, _glf_map, dt=0.3)
-    for i in range(_num):
+    particle_log = [_particles]
+    for _ in range(steps):
+        particle_log.append(_step(particle_log[-1], _glf_map, dt=delta_t))
+
+    for i_n in range(_num):
         plt.plot(
-            [_particles[i].pos[0], _new_particles[i].pos[0]],
-            [_particles[i].pos[1], _new_particles[i].pos[1]],
+            [particle_log[i_p][i_n].pos[0] for i_p in range(steps + 1)],
+            [particle_log[i_p][i_n].pos[1] for i_p in range(steps + 1)],
             marker="o",
             ls="-",
         )
     plt.show()
+
+
+if __name__ == "__main__":
+    main()

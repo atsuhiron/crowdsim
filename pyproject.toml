@@ -21,3 +21,6 @@ dev = [
     "ruff>=0.12.10",
     "ty>=0.0.1a19",
 ]
+
+[project.scripts]
+start = "crowdsim.main:main"
